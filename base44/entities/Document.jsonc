@@ -1,0 +1,67 @@
+{
+  "name": "Document",
+  "type": "object",
+  "properties": {
+    "nome": {
+      "type": "string",
+      "title": "Nome do documento"
+    },
+    "cliente_id": {
+      "type": "string",
+      "title": "Cliente"
+    },
+    "tipo": {
+      "type": "string",
+      "enum": [
+        "RG",
+        "CPF",
+        "Carteira de Trabalho",
+        "Comprovante de Resid\u00eancia",
+        "Laudo M\u00e9dico",
+        "Extrato INSS",
+        "Outros"
+      ],
+      "default": "Outros",
+      "title": "Tipo"
+    },
+    "data": {
+      "type": "string",
+      "format": "date",
+      "title": "Data"
+    },
+    "arquivo_url": {
+      "type": "string",
+      "format": "uri",
+      "title": "Arquivo"
+    },
+    "responsavel": {
+      "type": "string",
+      "title": "Respons\u00e1vel"
+    }
+  },
+  "required": [
+    "nome"
+  ],
+  "rls": {
+    "read": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

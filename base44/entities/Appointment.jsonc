@@ -1,0 +1,87 @@
+{
+  "name": "Appointment",
+  "type": "object",
+  "properties": {
+    "titulo": {
+      "type": "string",
+      "title": "T\u00edtulo"
+    },
+    "cliente_id": {
+      "type": "string",
+      "title": "Cliente"
+    },
+    "cliente_nome": {
+      "type": "string",
+      "title": "Nome do cliente"
+    },
+    "tipo_atendimento": {
+      "type": "string",
+      "enum": [
+        "Consulta Inicial",
+        "Reuni\u00e3o",
+        "Per\u00edcia",
+        "Audi\u00eancia",
+        "Requerimento",
+        "Retorno",
+        "Outro"
+      ],
+      "default": "Consulta Inicial",
+      "title": "Tipo de atendimento"
+    },
+    "data_hora": {
+      "type": "string",
+      "format": "date-time",
+      "title": "Data e hora"
+    },
+    "duracao": {
+      "type": "number",
+      "default": 60,
+      "title": "Dura\u00e7\u00e3o (minutos)"
+    },
+    "responsavel": {
+      "type": "string",
+      "title": "Respons\u00e1vel"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "agendado",
+        "confirmado",
+        "realizado",
+        "cancelado"
+      ],
+      "default": "agendado",
+      "title": "Status"
+    },
+    "observacoes": {
+      "type": "string",
+      "title": "Observa\u00e7\u00f5es"
+    }
+  },
+  "required": [
+    "titulo",
+    "data_hora"
+  ],
+  "rls": {
+    "read": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}
