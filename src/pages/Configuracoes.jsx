@@ -1,13 +1,16 @@
 import React, { useState } from "react";
+import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import PageHeader from "@/components/PageHeader";
 import InviteUsers from "@/components/InviteUsers";
+import { useAuth } from "@/lib/AuthContext";
 import { TEAM } from "@/lib/constants";
-import { Building2, Users, SlidersHorizontal } from "lucide-react";
+import { Building2, Users, SlidersHorizontal, FileClock, ChevronRight } from "lucide-react";
 
 export default function Configuracoes() {
+  const { user } = useAuth();
   const [firm, setFirm] = useState({ nome: "Praxis Advocacia", cnpj: "00.000.000/0001-00", email: "contato@praxis.adv.br", telefone: "(11) 3000-0000", endereco: "Av. Paulista, 1000 — São Paulo/SP" });
   const set = (k, v) => setFirm((f) => ({ ...f, [k]: v }));
 
@@ -51,6 +54,23 @@ export default function Configuracoes() {
 
           {/* Invites */}
           <InviteUsers />
+
+          {/* System report link - admin only */}
+          {user?.role === "admin" && (
+            <Link
+              to="/auditoria"
+              className="flex items-center justify-between bg-card border border-border rounded-lg p-6 hover:border-foreground/25 transition-colors"
+            >
+              <div className="flex items-center gap-2.5">
+                <FileClock className="w-4 h-4 text-muted-foreground" strokeWidth={1.6} />
+                <div>
+                  <h3 className="text-[13px] font-semibold uppercase tracking-[0.12em] text-foreground">Relatório de sistema</h3>
+                  <p className="text-[12px] text-muted-foreground mt-1">Veja o que cada pessoa criou, editou ou apagou.</p>
+                </div>
+              </div>
+              <ChevronRight className="w-4 h-4 text-muted-foreground" />
+            </Link>
+          )}
 
           {/* Preferences */}
           <Section icon={SlidersHorizontal} title="Preferências">

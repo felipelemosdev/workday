@@ -1,11 +1,12 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, ChevronRight, Plus } from "lucide-react";
+import { ChevronLeft, ChevronRight, Plus, FileDown, FileUp, Loader2 } from "lucide-react";
 import AppointmentFormDialog from "@/components/AppointmentFormDialog";
 import PageHeader from "@/components/PageHeader";
 import { fmt, isSameDay, addDays, addWeeks, weekStart, weekEnd, parseISO } from "@/lib/format";
 import { APPOINTMENT_STATUS } from "@/lib/constants";
+import { exportAppointmentsToExcel, importAppointmentsFromExcel } from "@/lib/excel";
 
 const HOUR_HEIGHT = 56;
 const HOURS = Array.from({ length: 12 }, (_, i) => i + 8);
@@ -16,6 +17,8 @@ export default function Agenda() {
   const [cursor, setCursor] = useState(new Date());
   const [dialogOpen, setDialogOpen] = useState(false);
   const [dialogDate, setDialogDate] = useState(null);
+  const [importing, setImporting] = useState(false);
+  const fileInputRef = useRef(null);
 
   const load = async () => {
     setLoading(true);
@@ -24,6 +27,30 @@ export default function Agenda() {
     } finally { setLoading(false); }
   };
   useEffect(() => { load(); }, []);
+
+  const handleExport = () => {
+    exportAppointmentsToExcel(appointments);
+  };
+
+  const handleImportClick = () => fileInputRef.current?.click();
+
+  const handleImportFile = async (e) => {
+    const file = e.target.files?.[0];
+    e.target.value = ""; // permite reimportar o mesmo arquivo depois
+    if (!file) return;
+    setImporting(true);
+    try {
+      const rows = await importAppointmentsFromExcel(file);
+      for (const row of rows) {
+        await base44.entities.Appointment.create(row);
+      }
+      await load();
+    } catch (err) {
+      alert("Não foi possível importar a planilha. Confira se as colunas seguem o modelo exportado.");
+    } finally {
+      setImporting(false);
+    }
+  };
 
   const ws = useMemo(() => weekStart(cursor), [cursor]);
   const we = useMemo(() => weekEnd(cursor), [cursor]);
@@ -56,6 +83,20 @@ export default function Agenda() {
           <button onClick={() => setCursor(new Date())} className="px-3 h-9 text-[13px] font-medium border-x border-border hover:bg-secondary/60">Hoje</button>
           <button onClick={() => setCursor(addWeeks(cursor, 1))} className="w-9 h-9 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary/60 rounded-r-md"><ChevronRight className="w-4 h-4" /></button>
         </div>
+        <Button variant="outline" className="h-9" onClick={handleExport}>
+          <FileDown className="w-4 h-4 mr-1.5" /> Exportar Excel
+        </Button>
+        <Button variant="outline" className="h-9" onClick={handleImportClick} disabled={importing}>
+          {importing ? <Loader2 className="w-4 h-4 mr-1.5 animate-spin" /> : <FileUp className="w-4 h-4 mr-1.5" />}
+          Importar Excel
+        </Button>
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept=".xlsx,.xls,.csv"
+          className="hidden"
+          onChange={handleImportFile}
+        />
         <Button className="h-9 bg-accent hover:bg-accent/90 text-accent-foreground" onClick={() => { setDialogDate(new Date()); setDialogOpen(true); }}>
           <Plus className="w-4 h-4 mr-1.5" /> Novo agendamento
         </Button>

@@ -2,9 +2,8 @@
 // (com hash) ficam salvos no IndexedDB do próprio navegador. A sessão ativa
 // fica em localStorage apontando para o id do usuário logado.
 
-import { getAllFromStore, withStore, uuid } from '@/lib/db';
+import { getAllFromStore, withStore, uuid, SESSION_KEY } from '@/lib/db';
 
-const SESSION_KEY = 'workday_session_user_id';
 
 async function sha256(text) {
   const enc = new TextEncoder().encode(text);
@@ -55,7 +54,7 @@ export const localAuth = {
   },
 
   async createUser({ email, password, role = 'user' }) {
-    // Usado pelo fluxo de "adicionar usuário" (substitui o convite por e-mail).
+    // Usado pelo admin para criar contas diretamente (sem envio de e-mail).
     return this.register({ email, password, role });
   },
 

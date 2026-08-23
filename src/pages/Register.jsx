@@ -1,10 +1,10 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { UserPlus, Mail, Lock, Loader2 } from "lucide-react";
+import { UserPlus, Mail, Lock, Loader2, ShieldAlert } from "lucide-react";
 import AuthLayout from "@/components/AuthLayout";
 import { safeReturnTo } from "@/lib/authReturnTo";
 
@@ -14,6 +14,23 @@ export default function Register() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [checkingBootstrap, setCheckingBootstrap] = useState(true);
+  const [registrationOpen, setRegistrationOpen] = useState(false);
+
+  useEffect(() => {
+    // Cadastro público só fica disponível para criar o primeiro admin.
+    // Depois disso, novas contas só podem ser criadas por um admin logado.
+    (async () => {
+      try {
+        const users = await base44.users.list();
+        setRegistrationOpen(users.length === 0);
+      } catch {
+        setRegistrationOpen(true);
+      } finally {
+        setCheckingBootstrap(false);
+      }
+    })();
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -37,6 +54,36 @@ export default function Register() {
       setLoading(false);
     }
   };
+
+  if (checkingBootstrap) {
+    return (
+      <AuthLayout icon={UserPlus} title="Criar sua conta" subtitle="Verificando...">
+        <div className="flex justify-center py-6">
+          <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
+        </div>
+      </AuthLayout>
+    );
+  }
+
+  if (!registrationOpen) {
+    return (
+      <AuthLayout
+        icon={ShieldAlert}
+        title="Cadastro desativado"
+        subtitle="Este sistema já tem um administrador configurado"
+        footer={
+          <Link to="/login" className="text-primary font-medium hover:underline">
+            Voltar para o login
+          </Link>
+        }
+      >
+        <p className="text-sm text-foreground text-center">
+          Novas contas só podem ser criadas por um administrador, em Configurações → Usuários.
+          Peça para quem administra o sistema criar seu acesso.
+        </p>
+      </AuthLayout>
+    );
+  }
 
   return (
     <AuthLayout

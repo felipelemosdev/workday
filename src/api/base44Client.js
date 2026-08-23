@@ -3,7 +3,7 @@
 // o app para que as páginas não precisassem ser reescritas uma a uma.
 // Os dados ficam salvos localmente no navegador via IndexedDB (src/lib/db.js).
 
-import { createCollection } from '@/lib/db';
+import { createCollection, getAllFromStore } from '@/lib/db';
 import { localAuth } from '@/lib/localAuth';
 
 export const base44 = {
@@ -40,6 +40,19 @@ export const base44 = {
       await localAuth.createUser({ email, password: tempPassword, role });
       return { email, tempPassword };
     },
+    createUser: (data) => localAuth.createUser(data),
     list: () => localAuth.listUsers(),
+  },
+
+  audit: {
+    // Log de auditoria: quem criou, editou ou apagou cada registro.
+    async list(limit = 500) {
+      const [events, users] = await Promise.all([getAllFromStore('audit_log'), localAuth.listUsers()]);
+      const userById = Object.fromEntries(users.map((u) => [u.id, u]));
+      return events
+        .sort((a, b) => new Date(b.created_date) - new Date(a.created_date))
+        .slice(0, limit)
+        .map((e) => ({ ...e, actor: userById[e.actor_id] || null }));
+    },
   },
 };

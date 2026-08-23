@@ -20,6 +20,7 @@ import Tarefas from '@/pages/Tarefas';
 import Processos from '@/pages/Processos';
 import Relatorios from '@/pages/Relatorios';
 import Configuracoes from '@/pages/Configuracoes';
+import Auditoria from '@/pages/Auditoria';
 // Add page imports here
 
 const AuthenticatedApp = () => {
@@ -52,6 +53,7 @@ const AuthenticatedApp = () => {
           <Route path="/processos" element={<Processos />} />
           <Route path="/relatorios" element={<Relatorios />} />
           <Route path="/configuracoes" element={<Configuracoes />} />
+          <Route path="/auditoria" element={<Auditoria />} />
         </Route>
       </Route>
       <Route path="*" element={<PageNotFound />} />
