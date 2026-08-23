@@ -21,6 +21,15 @@
       "type": "string",
       "title": "Telefone"
     },
+    "whatsapp": {
+      "type": "string",
+      "title": "WhatsApp"
+    },
+    "senha_gov": {
+      "type": "string",
+      "title": "Senha gov.br",
+      "description": "Senha de acesso ao portal gov.br informada pelo cliente (dado sensível)"
+    },
     "data_nascimento": {
       "type": "string",
       "format": "date",

@@ -1,15 +1,17 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Search, Plus, ChevronRight, Trash2, Loader2 } from "lucide-react";
+import { Search, Plus, ChevronRight, Trash2, Loader2, FileUp, FileDown, Printer } from "lucide-react";
 import PageHeader from "@/components/PageHeader";
 import { maskCPF } from "@/lib/format";
 import { CLIENT_SITUATION } from "@/lib/constants";
 import ResponsavelField from "@/components/ResponsavelField";
+import { importClientsFromExcel } from "@/lib/excel";
+import { exportClientsMonthlyPDF, printClientsMonthlyPDF } from "@/lib/pdf";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel,
   AlertDialogContent, AlertDialogDescription, AlertDialogFooter,
@@ -25,6 +27,31 @@ export default function Clients() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [deleting, setDeleting] = useState(false);
+  const [importing, setImporting] = useState(false);
+  const fileInputRef = useRef(null);
+
+  const handleImportClick = () => fileInputRef.current?.click();
+
+  const handleImportFile = async (e) => {
+    const file = e.target.files?.[0];
+    e.target.value = ""; // permite reimportar o mesmo arquivo depois
+    if (!file) return;
+    setImporting(true);
+    try {
+      const rows = await importClientsFromExcel(file);
+      for (const row of rows) {
+        await base44.entities.Client.create(row);
+      }
+      await load();
+    } catch (err) {
+      alert("Não foi possível importar a planilha. Confira se a coluna \"Nome\" está preenchida.");
+    } finally {
+      setImporting(false);
+    }
+  };
+
+  const handleExportPDF = () => exportClientsMonthlyPDF(clients);
+  const handlePrint = () => printClientsMonthlyPDF(clients);
 
   const handleDelete = async () => {
     if (!deleteTarget) return;
@@ -55,6 +82,23 @@ export default function Clients() {
   return (
     <div>
       <PageHeader meta="Base de clientes" title="Clientes" subtitle={`${filtered.length} cliente(s) na lista`}>
+        <Button variant="outline" className="h-9" onClick={handleImportClick} disabled={importing}>
+          {importing ? <Loader2 className="w-4 h-4 mr-1.5 animate-spin" /> : <FileUp className="w-4 h-4 mr-1.5" />}
+          Importar Excel
+        </Button>
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept=".xlsx,.xls,.csv"
+          className="hidden"
+          onChange={handleImportFile}
+        />
+        <Button variant="outline" className="h-9" onClick={handleExportPDF} title="Exporta os clientes cadastrados neste mês em PDF">
+          <FileDown className="w-4 h-4 mr-1.5" /> Exportar PDF (mês)
+        </Button>
+        <Button variant="outline" className="h-9" onClick={handlePrint} title="Imprime os clientes cadastrados neste mês">
+          <Printer className="w-4 h-4 mr-1.5" /> Imprimir
+        </Button>
         <Button className="h-9 bg-accent hover:bg-accent/90 text-accent-foreground" onClick={() => setDialogOpen(true)}>
           <Plus className="w-4 h-4 mr-1.5" /> Novo cliente
         </Button>
@@ -160,7 +204,7 @@ export default function Clients() {
 }
 
 function NewClientDialog({ open, onOpenChange, onSaved }) {
-  const [form, setForm] = useState({ nome: "", cpf: "", email: "", telefone: "", beneficio_tipo: "Aposentadoria", responsavel: "", situacao: "ativo", data_nascimento: "", endereco: "", observacoes: "" });
+  const [form, setForm] = useState({ nome: "", cpf: "", email: "", telefone: "", whatsapp: "", senha_gov: "", beneficio_tipo: "Aposentadoria", responsavel: "", situacao: "ativo", data_nascimento: "", endereco: "", observacoes: "" });
   const [saving, setSaving] = useState(false);
   const set = (k, v) => setForm((f) => ({ ...f, [k]: v }));
 
@@ -188,6 +232,10 @@ function NewClientDialog({ open, onOpenChange, onSaved }) {
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1.5"><Label htmlFor="email">E-mail</Label><Input id="email" type="email" value={form.email} onChange={(e) => set("email", e.target.value)} /></div>
             <div className="space-y-1.5"><Label htmlFor="tel">Telefone</Label><Input id="tel" value={form.telefone} onChange={(e) => set("telefone", e.target.value)} /></div>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-1.5"><Label htmlFor="wpp">WhatsApp</Label><Input id="wpp" value={form.whatsapp} onChange={(e) => set("whatsapp", e.target.value)} /></div>
+            <div className="space-y-1.5"><Label htmlFor="senhagov">Senha gov.br</Label><Input id="senhagov" value={form.senha_gov} onChange={(e) => set("senha_gov", e.target.value)} /></div>
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1.5"><Label htmlFor="ben">Tipo de benefício</Label>

@@ -169,6 +169,8 @@ function ResumoTab({ client, data }) {
             <Field label="Situação" value={CLIENT_SITUATION[client.situacao]?.label || "—"} />
             <Field label="E-mail" value={client.email || "—"} />
             <Field label="Telefone" value={client.telefone || "—"} />
+            <Field label="WhatsApp" value={client.whatsapp || "—"} />
+            <Field label="Senha gov.br" value={client.senha_gov || "—"} />
             <div className="col-span-2"><Field label="Endereço" value={client.endereco || "—"} /></div>
             <div className="col-span-2"><Field label="Observações" value={client.observacoes || "—"} /></div>
           </dl>
